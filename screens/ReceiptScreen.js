@@ -1,0 +1,192 @@
+import React, { useRef } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  ScrollView
+} from "react-native";
+
+// 1. Import captureRef explicitly
+import { captureRef } from "react-native-view-shot";
+import * as Sharing from "expo-sharing";
+
+export default function ReceiptScreen({ route }) {
+  const { house, renter } = route.params;
+
+  // 2. Set up a standard ref for a normal View container
+  const viewRef = useRef();
+
+  const saveReceipt = async () => {
+    try {
+      const isSharingAvailable = await Sharing.isAvailableAsync();
+      if (!isSharingAvailable) {
+        Alert.alert("Error", "Sharing is not available on this device.");
+        return;
+      }
+
+      // 3. Use captureRef directly on the standard View component
+      const uri = await captureRef(viewRef, {
+        format: "png",
+        quality: 1,
+      });
+
+      await Sharing.shareAsync(uri, {
+        mimeType: "image/png",
+        dialogTitle: "Save or Share Receipt",
+      });
+
+    } catch (error) {
+      console.log("Capture Error Logs: ", error);
+      Alert.alert("Error", "Failed to save receipt.");
+    }
+  };
+
+  return (
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={{
+        paddingBottom: 40
+      }}
+    >
+      {/* 4. Changed <ViewShot> to a standard <View> with collapsable={false} */}
+      {/* collapsable={false} is REQUIRED on Android so it doesn't optimize it out of the layout hierarchy */}
+      <View ref={viewRef} collapsable={false} style={styles.receipt}>
+        <Text style={styles.title}>
+          HOUSE RENTAL RECEIPT
+        </Text>
+
+        <Text style={styles.section}>
+          House Information
+        </Text>
+
+        <Text style={styles.text}>
+          House: {house?.name}
+        </Text>
+
+        <Text style={styles.text}>
+          Location: {house?.location}
+        </Text>
+
+        <Text style={styles.text}>
+          Rent: {house?.price}
+        </Text>
+
+        <Text style={styles.text}>
+          Bedrooms: {house?.bedrooms}
+        </Text>
+
+        <Text style={styles.text}>
+          Bathrooms: {house?.bathrooms}
+        </Text>
+
+        <View style={styles.divider} />
+
+        <Text style={styles.section}>
+          Tenant Information
+        </Text>
+
+        <Text style={styles.text}>
+          Name: {renter?.fullName}
+        </Text>
+
+        <Text style={styles.text}>
+          Email: {renter?.email}
+        </Text>
+
+        <Text style={styles.text}>
+          Contact: {renter?.contactNumber}
+        </Text>
+
+        <Text style={styles.text}>
+          Move-in Date: {renter?.moveInDate}
+        </Text>
+
+        <Text style={styles.text}>
+          Rental Duration: {renter?.rentalDuration} Month(s)
+        </Text>
+
+        <View style={styles.divider} />
+
+        <Text style={styles.confirmation}>
+          ✓ Rental Successfully Confirmed
+        </Text>
+
+        <Text style={styles.footer}>
+          Thank you for choosing our House Rental System.
+        </Text>
+      </View>
+
+      <TouchableOpacity
+        style={styles.button}
+        onPress={saveReceipt}
+      >
+        <Text style={styles.buttonText}>
+          Save Receipt
+        </Text>
+      </TouchableOpacity>
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#f4f6f8",
+    padding: 20
+  },
+  receipt: {
+    backgroundColor: "#fff",
+    borderRadius: 15,
+    padding: 20,
+    elevation: 4
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 20,
+    color: "#2E7D32"
+  },
+  section: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 10,
+    color: "#222"
+  },
+  text: {
+    fontSize: 16,
+    marginBottom: 8,
+    color: "#555"
+  },
+  divider: {
+    borderBottomWidth: 1,
+    borderBottomColor: "#ddd",
+    marginVertical: 15
+  },
+  confirmation: {
+    fontSize: 18,
+    fontWeight: "bold",
+    textAlign: "center",
+    color: "#2E7D32",
+    marginTop: 10
+  },
+  footer: {
+    textAlign: "center",
+    marginTop: 15,
+    color: "#666"
+  },
+  button: {
+    backgroundColor: "#2E7D32",
+    padding: 15,
+    borderRadius: 10,
+    marginTop: 20,
+    alignItems: "center"
+  },
+  buttonText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 18
+  }
+});
