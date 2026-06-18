@@ -6,33 +6,36 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
-  Alert
+  Alert,
+  Platform
 } from "react-native";
 
-export default function RentalFormScreen({
-  route,
-  navigation
-}) {
-  const { house } = route.params;
+import DateTimePicker from "@react-native-community/datetimepicker";
+
+export default function RentalFormScreen({ route, navigation }) {
+  const { house } = route.params || {};
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [contactNumber, setContactNumber] = useState("");
-  const [moveInDate, setMoveInDate] = useState("");
   const [rentalDuration, setRentalDuration] = useState("");
 
+  // 📅 DATE PICKER STATES
+  const [moveInDate, setMoveInDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
+
+  // 💰 PRICE CALCULATION
+  const basePrice = parseInt(house?.price?.replace(/\D/g, "")) || 0;
+  const totalPrice = rentalDuration ? basePrice * parseInt(rentalDuration) : 0;
+
   const handleConfirmRental = () => {
-    if (
-      !fullName ||
-      !email ||
-      !contactNumber ||
-      !moveInDate ||
-      !rentalDuration
-    ) {
-      Alert.alert(
-        "Incomplete Form",
-        "Please fill out all fields."
-      );
+    if (!house) {
+      Alert.alert("Error", "House data is missing.");
+      return;
+    }
+
+    if (!fullName || !email || !contactNumber || !rentalDuration) {
+      Alert.alert("Incomplete Form", "Please fill out all fields.");
       return;
     }
 
@@ -42,31 +45,21 @@ export default function RentalFormScreen({
         fullName,
         email,
         contactNumber,
-        moveInDate,
-        rentalDuration
+        moveInDate: moveInDate.toDateString(),
+        rentalDuration,
+        totalPrice
       }
     });
   };
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={{
-        paddingBottom: 30
-      }}
-    >
-      <Text style={styles.heading}>
-        Rental Information
-      </Text>
+    <ScrollView style={styles.container}>
+      <Text style={styles.heading}>Rental Information</Text>
 
-      <Text style={styles.houseName}>
-        {house.name}
-      </Text>
+      <Text style={styles.houseName}>{house?.name}</Text>
+      <Text style={styles.price}>Monthly: {house?.price}</Text>
 
-      <Text style={styles.price}>
-        {house.price}
-      </Text>
-
+      {/* INPUTS */}
       <TextInput
         style={styles.input}
         placeholder="Full Name"
@@ -79,7 +72,6 @@ export default function RentalFormScreen({
         placeholder="Email Address"
         value={email}
         onChangeText={setEmail}
-        keyboardType="email-address"
       />
 
       <TextInput
@@ -90,12 +82,27 @@ export default function RentalFormScreen({
         keyboardType="phone-pad"
       />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Move-in Date (MM/DD/YYYY)"
-        value={moveInDate}
-        onChangeText={setMoveInDate}
-      />
+      {/* 📅 DATE PICKER */}
+      <TouchableOpacity
+        style={styles.dateBox}
+        onPress={() => setShowDatePicker(true)}
+      >
+        <Text style={styles.dateText}>
+          Move-in Date: {moveInDate.toDateString()}
+        </Text>
+      </TouchableOpacity>
+
+      {showDatePicker && (
+        <DateTimePicker
+          value={moveInDate}
+          mode="date"
+          display={Platform.OS === "ios" ? "spinner" : "default"}
+          onChange={(event, selectedDate) => {
+            setShowDatePicker(false);
+            if (selectedDate) setMoveInDate(selectedDate);
+          }}
+        />
+      )}
 
       <TextInput
         style={styles.input}
@@ -105,18 +112,25 @@ export default function RentalFormScreen({
         keyboardType="numeric"
       />
 
+      {/* 💰 AUTO TOTAL */}
+      {rentalDuration ? (
+        <Text style={styles.total}>
+          Total Price: ₱{totalPrice}
+        </Text>
+      ) : null}
+
+      {/* BUTTON */}
       <TouchableOpacity
         style={styles.button}
         onPress={handleConfirmRental}
       >
-        <Text style={styles.buttonText}>
-          Confirm Rental
-        </Text>
+        <Text style={styles.buttonText}>Confirm Rental</Text>
       </TouchableOpacity>
     </ScrollView>
   );
 }
 
+/* ================= STYLES ================= */
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -127,8 +141,7 @@ const styles = StyleSheet.create({
   heading: {
     fontSize: 26,
     fontWeight: "bold",
-    marginBottom: 10,
-    color: "#222"
+    marginBottom: 10
   },
 
   houseName: {
@@ -138,7 +151,6 @@ const styles = StyleSheet.create({
   },
 
   price: {
-    fontSize: 16,
     marginBottom: 20,
     color: "#666"
   },
@@ -147,22 +159,37 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     padding: 15,
     borderRadius: 10,
+    marginBottom: 15
+  },
+
+  dateBox: {
+    backgroundColor: "#fff",
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 15
+  },
+
+  dateText: {
+    color: "#333"
+  },
+
+  total: {
+    fontSize: 18,
+    fontWeight: "bold",
     marginBottom: 15,
-    borderWidth: 1,
-    borderColor: "#ddd"
+    color: "#2E7D32"
   },
 
   button: {
     backgroundColor: "#2E7D32",
     padding: 15,
     borderRadius: 10,
-    alignItems: "center",
-    marginTop: 10
+    alignItems: "center"
   },
 
   buttonText: {
     color: "#fff",
-    fontWeight: "bold",
-    fontSize: 18
+    fontSize: 18,
+    fontWeight: "bold"
   }
 });

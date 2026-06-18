@@ -1,9 +1,13 @@
-import React from "react";
+import React, { useState, useMemo } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
+/* ================= CONTEXT (IMPORT FROM SEPARATE FILE) ================= */
+import { FavoritesContext, RentalsContext } from "./AppContext";
+
+/* ================= SCREENS ================= */
 import HomeScreen from "./screens/HomeScreen";
 import DashboardScreen from "./screens/DashboardScreen";
 import HouseDetailScreen from "./screens/HouseDetailScreen";
@@ -17,171 +21,138 @@ import SettingsScreen from "./screens/SettingsScreen";
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
+/* ================= ICONS ================= */
+function getIcon(routeName, focused) {
+  const icons = {
+    Houses: ["home", "home-outline"],
+    Favorites: ["heart", "heart-outline"],
+    Rentals: ["clipboard", "clipboard-outline"],
+    About: ["information-circle", "information-circle-outline"],
+    Settings: ["settings", "settings-outline"],
+  };
+
+  const [active, inactive] = icons[routeName] || [
+    "ellipse",
+    "ellipse-outline",
+  ];
+
+  return focused ? active : inactive;
+}
+
+/* ================= TABS ================= */
 function BottomTabs() {
+  const { favorites } = React.useContext(FavoritesContext);
+
+  const badgeCount =
+    favorites.length > 99 ? "99+" : favorites.length || undefined;
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarShowLabel: true,
-
         tabBarStyle: {
-          height: 70,
+          height: 65,
           backgroundColor: "#2E7D32",
           borderTopWidth: 0,
-
-          elevation: 8,
-          shadowColor: "#000",
-          shadowOffset: {
-            width: 0,
-            height: -2,
-          },
-          shadowOpacity: 0.1,
-          shadowRadius: 4,
+          paddingBottom: 8,
+          paddingTop: 6,
         },
-
         tabBarActiveTintColor: "#fff",
-        tabBarInactiveTintColor: "#E8F5E9",
-
-        tabBarLabelStyle: {
+        tabBarInactiveTintColor: "#C8E6C9",
+        tabBarIcon: ({ focused, color, size }) => (
+          <Ionicons
+            name={getIcon(route.name, focused)}
+            size={size || 22}
+            color={color}
+          />
+        ),
+        tabBarBadge:
+          route.name === "Favorites" ? badgeCount : undefined,
+        tabBarBadgeStyle: {
+          backgroundColor: "red",
+          color: "white",
           fontSize: 10,
-          fontWeight: "bold",
-          marginBottom: 5,
-        },
-
-        tabBarIcon: ({ focused, color }) => {
-          let iconName;
-
-          switch (route.name) {
-            case "Houses":
-              iconName = focused ? "home" : "home-outline";
-              break;
-
-            case "Favorites":
-              iconName = focused ? "heart" : "heart-outline";
-              break;
-
-            case "Rentals":
-              iconName = focused
-                ? "clipboard"
-                : "clipboard-outline";
-              break;
-
-            case "About":
-              iconName = focused
-                ? "information-circle"
-                : "information-circle-outline";
-              break;
-
-            case "Settings":
-              iconName = focused
-                ? "settings"
-                : "settings-outline";
-              break;
-
-            default:
-              iconName = "ellipse";
-          }
-
-          return (
-            <Ionicons
-              name={iconName}
-              size={22}
-              color={color}
-            />
-          );
         },
       })}
     >
-      <Tab.Screen
-        name="Houses"
-        component={DashboardScreen}
-        options={{
-          title: "Houses",
-        }}
-      />
-
-      <Tab.Screen
-        name="Favorites"
-        component={FavoritesScreen}
-        options={{
-          title: "Favorites",
-        }}
-      />
-
-      <Tab.Screen
-        name="Rentals"
-        component={RentalsScreen}
-        options={{
-          title: "Rentals",
-        }}
-      />
-
-      <Tab.Screen
-        name="About"
-        component={AboutScreen}
-        options={{
-          title: "About",
-        }}
-      />
-
-      <Tab.Screen
-        name="Settings"
-        component={SettingsScreen}
-        options={{
-          title: "Settings",
-        }}
-      />
+      <Tab.Screen name="Houses" component={DashboardScreen} />
+      <Tab.Screen name="Favorites" component={FavoritesScreen} />
+      <Tab.Screen name="Rentals" component={RentalsScreen} />
+      <Tab.Screen name="About" component={AboutScreen} />
+      <Tab.Screen name="Settings" component={SettingsScreen} />
     </Tab.Navigator>
   );
 }
 
+/* ================= MAIN APP ================= */
 export default function App() {
+  const [favorites, setFavorites] = useState([]);
+  const [rentals, setRentals] = useState([]);
+
+  /* ❤️ FAVORITES */
+  const toggleFavorite = (house) => {
+    if (!house?.id) return;
+
+    setFavorites((prev) => {
+      const exists = prev.some((item) => item.id === house.id);
+
+      if (exists) {
+        return prev.filter((item) => item.id !== house.id);
+      }
+
+      return [...prev, house];
+    });
+  };
+
+  /* 🏠 RENTALS */
+  const addRental = (house, renter) => {
+    const newRental = {
+      id: Date.now(),
+      name: house.name,
+      price: house.price,
+      duration: renter.rentalDuration,
+      status: "Active",
+      createdAt: new Date().toISOString(),
+    };
+
+    setRentals((prev) => [newRental, ...prev]);
+  };
+
+  const removeRental = (id) => {
+    setRentals((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  /* ================= CONTEXT VALUES ================= */
+  const favoritesValue = useMemo(
+    () => ({ favorites, toggleFavorite }),
+    [favorites]
+  );
+
+  const rentalsValue = useMemo(
+    () => ({ rentals, addRental, removeRental }),
+    [rentals]
+  );
+
   return (
-    <NavigationContainer>
-      <Stack.Navigator
-        initialRouteName="Home"
-        screenOptions={{
-          headerStyle: {
-            backgroundColor: "#2E7D32",
-          },
-          headerTintColor: "#fff",
-          headerTitleStyle: {
-            fontWeight: "bold",
-          },
-        }}
-      >
-        <Stack.Screen
-          name="Home"
-          component={HomeScreen}
-          options={{ title: "House Rental" }}
-        />
-
-        <Stack.Screen
-          name="Dashboard"
-          component={BottomTabs}
-          options={{
-            headerShown: false,
-          }}
-        />
-
-        <Stack.Screen
-          name="HouseDetails"
-          component={HouseDetailScreen}
-          options={{ title: "House Details" }}
-        />
-
-        <Stack.Screen
-          name="RentalForm"
-          component={RentalFormScreen}
-          options={{ title: "Rental Form" }}
-        />
-
-        <Stack.Screen
-          name="Receipt"
-          component={ReceiptScreen}
-          options={{ title: "Rental Receipt" }}
-        />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <FavoritesContext.Provider value={favoritesValue}>
+      <RentalsContext.Provider value={rentalsValue}>
+        <NavigationContainer>
+          <Stack.Navigator
+            initialRouteName="Home"
+            screenOptions={{
+              headerStyle: { backgroundColor: "#2E7D32" },
+              headerTintColor: "#fff",
+              headerTitleStyle: { fontWeight: "bold" },
+            }}
+          >
+            <Stack.Screen name="Home" component={HomeScreen} />
+            <Stack.Screen name="Dashboard" component={BottomTabs} />
+            <Stack.Screen name="HouseDetails" component={HouseDetailScreen} />
+            <Stack.Screen name="RentalForm" component={RentalFormScreen} />
+            <Stack.Screen name="Receipt" component={ReceiptScreen} />
+          </Stack.Navigator>
+        </NavigationContainer>
+      </RentalsContext.Provider>
+    </FavoritesContext.Provider>
   );
 }
