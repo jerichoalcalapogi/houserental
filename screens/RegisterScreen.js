@@ -9,7 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function RegisterScreen({ navigation }) {
 
@@ -20,39 +20,67 @@ export default function RegisterScreen({ navigation }) {
 
 
 
-  const handleRegister =()=>{
+ const handleRegister = async()=>{
 
 
-    if(!name || !email || !password){
+if(!name || !email || !password){
 
 
-      Alert.alert(
-        "Missing Information",
-        "Please complete all fields"
-      );
+Alert.alert(
+"Missing Information",
+"Please complete all fields"
+);
 
 
-      return;
+return;
 
-    }
-
-
-
-    Alert.alert(
-      "Account Created 🎉",
-      "Registration Successful"
-    );
-
-
-
-    navigation.navigate("Login");
-
-
-  };
+}
 
 
 
 
+
+const user = {
+
+name:name,
+
+email:email,
+
+password:password
+
+};
+
+
+
+
+
+await AsyncStorage.setItem(
+
+"user",
+
+JSON.stringify(user)
+
+);
+
+
+
+
+
+Alert.alert(
+
+"Account Created 🎉",
+
+"Registration Successful"
+
+);
+
+
+
+navigation.navigate("Login");
+
+
+
+};
 
 
 return(

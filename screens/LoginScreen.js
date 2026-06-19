@@ -10,6 +10,8 @@ import {
   Platform,
 } from "react-native";
 
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 export default function LoginScreen({ navigation }) {
 
 
@@ -18,34 +20,107 @@ export default function LoginScreen({ navigation }) {
 
 
 
-  const handleLogin =()=>{
+ const handleLogin = async()=>{
 
 
-    if(!email || !password){
-
-      Alert.alert(
-        "Missing Information",
-        "Please enter your email and password"
-      );
-
-      return;
-
-    }
+if(!email || !password){
 
 
+Alert.alert(
 
-    Alert.alert(
-      "Welcome Back 🏠",
-      "Login Successful"
-    );
+"Missing Information",
+
+"Please enter your email and password"
+
+);
+
+
+return;
+
+}
 
 
 
-    navigation.replace("Dashboard");
 
 
-  };
+// CHECK IF USER REGISTERED
 
+const savedUser = await AsyncStorage.getItem("user");
+
+
+
+
+
+if(savedUser === null){
+
+
+Alert.alert(
+
+"No Account Found",
+
+"Please register first before login"
+
+);
+
+
+return;
+
+
+}
+
+
+
+
+
+const user = JSON.parse(savedUser);
+
+
+
+
+
+// CHECK EMAIL AND PASSWORD
+
+
+if(
+email === user.email &&
+password === user.password
+
+){
+
+
+Alert.alert(
+
+"Welcome Back 🏠",
+
+"Login Successful"
+
+);
+
+
+
+navigation.replace("Dashboard");
+
+
+
+}
+
+else{
+
+
+Alert.alert(
+
+"Login Failed",
+
+"Incorrect email or password"
+
+);
+
+
+}
+
+
+
+};
 
 
 
