@@ -100,8 +100,8 @@ export default function AboutScreen() {
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>App Info</Text>
 
-        <Text style={styles.infoText}>Version: 1.0.0</Text>
-        <Text style={styles.infoText}>Developer: Your Team</Text>
+       
+        <Text style={styles.infoText}>Developer: Koshes & Yul</Text>
         <Text style={styles.infoText}>Platform: React Native Expo</Text>
       </View>
     </ScrollView>

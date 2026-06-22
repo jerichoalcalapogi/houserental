@@ -5,6 +5,7 @@ import {
   StyleSheet,
   TextInput,
   Text,
+  StatusBar,
 } from "react-native";
 
 import houses from "../data/houses";
@@ -21,27 +22,31 @@ export default function DashboardScreen({ navigation }) {
     <HouseCard
       house={item}
       onPress={() =>
-        navigation.navigate("HouseDetails", {
-          house: item,
-        })
+        navigation.navigate("HouseDetails", { house: item })
       }
     />
   );
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>
-     
-      </Text>
+      <StatusBar barStyle="dark-content" backgroundColor="#f4f6f8" />
 
+      {/* HEADER */}
+      <View style={styles.header}>
+        <Text style={styles.title}>Find Your Home 🏡</Text>
+        <Text style={styles.subtitle}>Discover best rental places</Text>
+      </View>
+
+      {/* SEARCH */}
       <TextInput
-        placeholder="🔍 Search House..."
+        placeholder="Search house, location..."
         placeholderTextColor="#888"
         value={search}
         onChangeText={setSearch}
         style={styles.searchInput}
       />
 
+      {/* LIST */}
       <FlatList
         data={filteredHouses}
         keyExtractor={(item) => item.id.toString()}
@@ -57,38 +62,44 @@ export default function DashboardScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 15,
     backgroundColor: "#f4f6f8",
+    paddingHorizontal: 15,
+    paddingTop: 10, // 🔥 moves everything UP
+  },
+
+  header: {
+    marginBottom: 10,
   },
 
   title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#2E7D32",
-    marginBottom: 15,
+    fontSize: 26,
+    fontWeight: "800",
+    color: "#1B5E20",
+  },
+
+  subtitle: {
+    fontSize: 13,
+    color: "#777",
+    marginTop: 2,
   },
 
   searchInput: {
     backgroundColor: "#fff",
     paddingHorizontal: 15,
     paddingVertical: 12,
-    borderRadius: 12,
-    marginBottom: 15,
-    borderWidth: 1,
-    borderColor: "#ddd",
-    fontSize: 16,
+    borderRadius: 14,
+    marginTop: 10,
+    marginBottom: 12,
+
+    fontSize: 15,
 
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 2,
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 3,
   },
 
   listContent: {
-    paddingBottom: 110,
+    paddingBottom: 20,
   },
 });

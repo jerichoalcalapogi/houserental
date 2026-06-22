@@ -10,7 +10,6 @@ import {
 
 import { captureRef } from "react-native-view-shot";
 import * as Sharing from "expo-sharing";
-import { FavoritesContext } from "../AppContext";
 import { RentalsContext } from "../AppContext";
 
 export default function ReceiptScreen({ route }) {
@@ -20,6 +19,8 @@ export default function ReceiptScreen({ route }) {
   const [loading, setLoading] = useState(false);
 
   const { addRental } = useContext(RentalsContext);
+
+  const receiptNumber = renter?.receiptNumber || `RN${Date.now()}`;
 
   const saveReceipt = async () => {
     try {
@@ -46,8 +47,7 @@ export default function ReceiptScreen({ route }) {
         dialogTitle: "Receipt",
       });
 
-      // 🔥 AUTO SAVE TO RENTALS
-      addRental(house, renter);
+      await addRental(house, renter);
 
       Alert.alert("Success", "Saved to Gallery + My Rentals 🏠");
     } catch (error) {
@@ -61,28 +61,69 @@ export default function ReceiptScreen({ route }) {
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
       <View ref={viewRef} collapsable={false} style={styles.receipt}>
-        <Text style={styles.title}>HOUSE RENTAL RECEIPT</Text>
+        <View style={styles.topBar}>
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>RECEIPT</Text>
+          </View>
+          <Text style={styles.pageTitle}>House Rental Receipt</Text>
+        </View>
 
-        <Text style={styles.section}>House Information</Text>
-        <Text style={styles.text}>House: {house?.name}</Text>
-        <Text style={styles.text}>Location: {house?.location}</Text>
-        <Text style={styles.text}>Rent: {house?.price}</Text>
-        <Text style={styles.text}>Bedrooms: {house?.bedrooms}</Text>
-        <Text style={styles.text}>Bathrooms: {house?.bathrooms}</Text>
+        <View style={styles.statusBox}>
+          <Text style={styles.statusIcon}>✔</Text>
+          <Text style={styles.statusTitle}>Confirmed</Text>
+          <Text style={styles.statusSubtitle}>Your rental has been booked successfully</Text>
+        </View>
 
-        <View style={styles.divider} />
+        <View style={styles.summaryCard}>
+          <Text style={styles.summaryLabel}>Receipt Number</Text>
+          <Text style={styles.summaryValue}>{receiptNumber}</Text>
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryText}>House</Text>
+            <Text style={styles.summaryText}>{house?.name || "--"}</Text>
+          </View>
+        </View>
 
-        <Text style={styles.section}>Tenant Information</Text>
-        <Text style={styles.text}>Name: {renter?.fullName}</Text>
-        <Text style={styles.text}>Email: {renter?.email}</Text>
-        <Text style={styles.text}>Contact: {renter?.contactNumber}</Text>
-        <Text style={styles.text}>Move-in Date: {renter?.moveInDate}</Text>
-        <Text style={styles.text}>Duration: {renter?.rentalDuration}</Text>
+        <Text style={styles.sectionLabel}>Rental Details</Text>
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Location</Text>
+          <Text style={styles.detailValue}>{house?.location || "--"}</Text>
+        </View>
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Rent</Text>
+          <Text style={styles.detailValue}>{house?.price || "--"}</Text>
+        </View>
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Bedrooms</Text>
+          <Text style={styles.detailValue}>{house?.bedrooms || "--"}</Text>
+        </View>
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Bathrooms</Text>
+          <Text style={styles.detailValue}>{house?.bathrooms || "--"}</Text>
+        </View>
 
-        <View style={styles.divider} />
+        <Text style={styles.sectionLabel}>Guest Details</Text>
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Name</Text>
+          <Text style={styles.detailValue}>{renter?.fullName || "--"}</Text>
+        </View>
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Email</Text>
+          <Text style={styles.detailValue}>{renter?.email || "--"}</Text>
+        </View>
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Contact</Text>
+          <Text style={styles.detailValue}>{renter?.contactNumber || "--"}</Text>
+        </View>
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Move-in</Text>
+          <Text style={styles.detailValue}>{renter?.moveInDate || "--"}</Text>
+        </View>
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Duration</Text>
+          <Text style={styles.detailValue}>{renter?.rentalDuration || "--"}</Text>
+        </View>
 
-        <Text style={styles.confirmation}>✓ Rental Confirmed</Text>
-        <Text style={styles.footer}>Thank you for choosing us.</Text>
+        <Text style={styles.footer}>Powered by House Rental</Text>
       </View>
 
       <TouchableOpacity
@@ -102,67 +143,155 @@ export default function ReceiptScreen({ route }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f4f6f8",
+    backgroundColor: "#f0faf0",
     padding: 20,
   },
 
   receipt: {
     backgroundColor: "#fff",
-    borderRadius: 15,
-    padding: 20,
-    elevation: 4,
+    borderRadius: 18,
+    padding: 24,
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 8,
   },
 
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 20,
-    color: "#2E7D32",
+  topBar: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 18,
   },
 
-  section: {
+  badge: {
+    backgroundColor: "#2E7D32",
+    borderRadius: 10,
+    paddingVertical: 5,
+    paddingHorizontal: 12,
+  },
+
+  badgeText: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 12,
+  },
+
+  pageTitle: {
     fontSize: 18,
-    fontWeight: "bold",
+    fontWeight: "700",
+    color: "#153d18",
+  },
+
+  statusBox: {
+    backgroundColor: "#e5f6ea",
+    borderRadius: 16,
+    padding: 18,
+    alignItems: "center",
+    marginBottom: 16,
+  },
+
+  statusIcon: {
+    fontSize: 28,
+    color: "#2E7D32",
     marginBottom: 10,
   },
 
-  text: {
-    fontSize: 16,
-    marginBottom: 6,
-    color: "#555",
-  },
-
-  divider: {
-    borderBottomWidth: 1,
-    borderBottomColor: "#ddd",
-    marginVertical: 15,
-  },
-
-  confirmation: {
-    textAlign: "center",
-    fontSize: 18,
-    fontWeight: "bold",
+  statusTitle: {
+    fontSize: 20,
+    fontWeight: "700",
     color: "#2E7D32",
+    marginBottom: 6,
+  },
+
+  statusSubtitle: {
+    fontSize: 14,
+    color: "#4b6c4f",
+    textAlign: "center",
+    lineHeight: 20,
+  },
+
+  summaryCard: {
+    backgroundColor: "#f4fbf4",
+    borderRadius: 16,
+    padding: 18,
+    marginBottom: 16,
+  },
+
+  summaryLabel: {
+    color: "#4b6c4f",
+    fontSize: 12,
+    fontWeight: "700",
+    marginBottom: 6,
+  },
+
+  summaryValue: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#1f4f1f",
+    marginBottom: 12,
+  },
+
+  summaryRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+
+  summaryText: {
+    color: "#4b6c4f",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+
+  sectionLabel: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#1f4f1f",
+    marginBottom: 10,
+  },
+
+  detailRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#dcf2db",
+  },
+
+  detailLabel: {
+    color: "#4b6c4f",
+    fontSize: 14,
+    width: "45%",
+  },
+
+  detailValue: {
+    color: "#1f3d1f",
+    fontSize: 14,
+    fontWeight: "600",
+    width: "50%",
+    textAlign: "right",
   },
 
   footer: {
+    marginTop: 20,
     textAlign: "center",
-    marginTop: 10,
-    color: "#666",
+    color: "#4b6c4f",
+    fontSize: 13,
+    lineHeight: 18,
   },
 
   button: {
     backgroundColor: "#2E7D32",
-    padding: 15,
-    borderRadius: 10,
+    padding: 16,
+    borderRadius: 14,
     marginTop: 20,
     alignItems: "center",
   },
 
   buttonText: {
     color: "#fff",
-    fontWeight: "bold",
-    fontSize: 18,
+    fontWeight: "700",
+    fontSize: 16,
   },
 });

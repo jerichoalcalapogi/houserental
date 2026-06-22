@@ -22,6 +22,10 @@ export default function HouseCard({ house, onPress }) {
           📍 {house.location}
         </Text>
 
+        <Text style={styles.rating}>
+          ⭐ {house.rating.toFixed(1)} / 5.0
+        </Text>
+
         <Text style={styles.price}>
           {house.price}
         </Text>
@@ -56,6 +60,12 @@ const styles = StyleSheet.create({
   location: {
     marginTop: 5,
     color: "#555"
+  },
+
+  rating: {
+    marginTop: 8,
+    color: "#444",
+    fontWeight: "600",
   },
 
   price: {
